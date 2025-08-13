@@ -1,24 +1,25 @@
-﻿namespace BitChat.Maui;
+using BitChat.Maui.Presentation.Views;
+
+namespace BitChat.Maui;
 
 public partial class MainPage : ContentPage
 {
-	int count = 0;
-
 	public MainPage()
 	{
 		InitializeComponent();
 	}
 
-	private void OnCounterClicked(object sender, EventArgs e)
+	private async void OnSettingsClicked(object sender, EventArgs e)
 	{
-		count++;
-
-		if (count == 1)
-			CounterBtn.Text = $"Clicked {count} time";
-		else
-			CounterBtn.Text = $"Clicked {count} times";
-
-		SemanticScreenReader.Announce(CounterBtn.Text);
+		try
+		{
+			var settingsPage = ServiceHelper.GetService<SettingsPage>();
+			await Navigation.PushAsync(settingsPage);
+		}
+		catch (Exception ex)
+		{
+			await DisplayAlert("Error", $"Could not open settings: {ex.Message}", "OK");
+		}
 	}
 }
 
