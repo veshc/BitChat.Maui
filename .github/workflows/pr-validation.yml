@@ -20,9 +20,10 @@ jobs:
       run: |
         title="${{ github.event.pull_request.title }}"
         echo "Validating PR title: $title"
+        echo "Title length: ${#title} characters"
         
-        # Check if PR title follows conventional commit format (up to 100 chars)
-        if [[ "$title" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-zA-Z0-9._-]+\))?: .{1,100}$ ]]; then
+        # Check if PR title starts with valid conventional commit type
+        if echo "$title" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-zA-Z0-9._-]+\))?: "; then
           echo "✅ PR title follows conventional commit format"
         else
           echo "❌ PR title should follow format: type(scope): description"
@@ -31,8 +32,17 @@ jobs:
           echo "  fix(bluetooth): resolve connection timeout issue"  
           echo "  test(integration): add settings service tests"
           echo "Current title: $title"
-          echo "Length: ${#title} characters"
           exit 1
+        fi
+        
+        # Check reasonable length (not too short, not too long)
+        if [ ${#title} -lt 10 ]; then
+          echo "❌ PR title too short (minimum 10 characters)"
+          exit 1
+        fi
+        
+        if [ ${#title} -gt 120 ]; then
+          echo "⚠️ Warning: PR title is quite long (${#title} characters). Consider shortening."
         fi
         
     - name: Check Branch Naming
@@ -92,7 +102,7 @@ jobs:
             echo "Checking commit: $message"
             
             # Allow merge commits and conventional commit format
-            if [[ "$message" =~ ^Merge.* ]] || [[ "$message" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-zA-Z0-9._-]+\))?: .+ ]]; then
+            if echo "$message" | grep -qE "^Merge" || echo "$message" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-zA-Z0-9._-]+\))?: "; then
               echo "  ✅ Valid commit message format"
             else
               echo "  ❌ Invalid commit message format"

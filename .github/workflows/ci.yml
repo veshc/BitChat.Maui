@@ -122,7 +122,7 @@ jobs:
           
     - name: Restore NuGet packages for Android
       run: |
-        dotnet restore BitChat.Maui.csproj --framework net8.0-android
+        dotnet restore BitChat.Maui.csproj
         
     - name: Build Android
       run: |
@@ -176,7 +176,7 @@ jobs:
           ${{ runner.os }}-nuget-
           
     - name: Restore NuGet packages for iOS
-      run: dotnet restore BitChat.Maui.csproj --framework net8.0-ios
+      run: dotnet restore BitChat.Maui.csproj
       
     - name: Build iOS
       run: |
