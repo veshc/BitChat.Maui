@@ -102,7 +102,7 @@
                            TextColor="{DynamicResource PrimaryTextColor}" />
                     
                     <Button Text="Reset All Settings"
-                            Command="{Binding ResetCommand}"
+                            Command="{Binding ResetSettingsCommand}"
                             BackgroundColor="DarkRed"
                             TextColor="White"
                             CornerRadius="5" />

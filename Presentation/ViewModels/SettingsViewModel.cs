@@ -26,8 +26,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _canSave = true;
 
-    [ObservableProperty]
-    private int _characterCount;
+    public int CharacterCount => Nickname?.Length ?? 0;
 
     private string _originalNickname = string.Empty;
 
@@ -47,7 +46,6 @@ public partial class SettingsViewModel : ObservableObject
             var identity = await _settingsService.GetUserIdentityAsync();
             Nickname = identity.Nickname;
             _originalNickname = identity.Nickname;
-            UpdateCharacterCount();
             _logger.LogDebug("Settings initialized with nickname: {Nickname}", Nickname);
         }
         catch (Exception ex)
@@ -63,9 +61,9 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     partial void OnNicknameChanged(string value)
     {
-        UpdateCharacterCount();
         ValidateNickname();
         UpdateCanSave();
+        OnPropertyChanged(nameof(CharacterCount));
     }
 
     /// <summary>
@@ -88,14 +86,6 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Updates the character count display
-    /// </summary>
-    private void UpdateCharacterCount()
-    {
-        CharacterCount = Nickname?.Length ?? 0;
-    }
-
-    /// <summary>
     /// Updates whether the save button should be enabled
     /// </summary>
     private void UpdateCanSave()
@@ -106,9 +96,19 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Determines if the save command can execute
+    /// </summary>
+    private bool CanExecuteSave()
+    {
+        return !HasNicknameError && 
+               !string.IsNullOrWhiteSpace(Nickname) && 
+               Nickname != _originalNickname;
+    }
+
+    /// <summary>
     /// Command to save the current settings
     /// </summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteSave))]
     private async Task SaveAsync()
     {
         if (HasNicknameError || string.IsNullOrWhiteSpace(Nickname))
@@ -139,7 +139,7 @@ public partial class SettingsViewModel : ObservableObject
     /// Command to reset all settings to defaults
     /// </summary>
     [RelayCommand]
-    private async Task ResetAsync()
+    private async Task ResetSettingsAsync()
     {
         var confirm = await Application.Current?.MainPage?.DisplayAlert("Confirm Reset", 
             "Are you sure you want to reset all settings? This action cannot be undone.", 
