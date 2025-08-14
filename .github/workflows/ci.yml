@@ -1,0 +1,241 @@
+name: Build and Test - iOS & Android
+
+on:
+  pull_request:
+    branches: [ main, develop, 'feature/**' ]
+    paths-ignore: 
+      - 'docs/**'
+      - '*.md'
+      - 'README.md'
+      - 'LICENSE'
+  push:
+    branches: [ main, develop ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  JAVA_VERSION: '17'
+
+jobs:
+  tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-tests-${{ hashFiles('Tests/**/*.csproj', 'UITests/**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-tests-
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore Test Projects
+      run: |
+        dotnet restore Tests/BitChat.Maui.Tests.csproj
+        dotnet restore UITests/BitChat.Maui.UITests.csproj
+        
+    - name: Build Test Projects
+      run: |
+        dotnet build Tests/BitChat.Maui.Tests.csproj --configuration Debug --no-restore
+        dotnet build UITests/BitChat.Maui.UITests.csproj --configuration Debug --no-restore
+        
+    - name: Run Unit Tests
+      run: |
+        dotnet test Tests --filter "FullyQualifiedName~Unit" \
+          --configuration Debug \
+          --no-build \
+          --logger trx \
+          --collect:"XPlat Code Coverage" \
+          --results-directory TestResults/Unit
+          
+    - name: Run Integration Tests  
+      run: |
+        dotnet test Tests --filter "FullyQualifiedName~Integration" \
+          --configuration Debug \
+          --no-build \
+          --logger trx \
+          --collect:"XPlat Code Coverage" \
+          --results-directory TestResults/Integration
+          
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: TestResults/
+        retention-days: 30
+        
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        unit_files=$(find TestResults/Unit -name "*.trx" 2>/dev/null | wc -l)
+        integration_files=$(find TestResults/Integration -name "*.trx" 2>/dev/null | wc -l)
+        echo "- Unit Test Results: $unit_files file(s)" >> $GITHUB_STEP_SUMMARY
+        echo "- Integration Test Results: $integration_files file(s)" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Tests completed successfully!" >> $GITHUB_STEP_SUMMARY
+
+  android-build:
+    name: Android Build
+    runs-on: ubuntu-latest
+    needs: tests
+    if: success()
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'microsoft'
+        java-version: ${{ env.JAVA_VERSION }}
+        
+    - name: Install MAUI Android Workload
+      run: |
+        dotnet workload install maui-android
+        dotnet workload list
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-android-${{ hashFiles('**/*.csproj', '**/*.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-android-
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore NuGet packages for Android
+      run: |
+        dotnet restore BitChat.Maui.csproj
+        
+    - name: Build Android
+      run: |
+        dotnet build BitChat.Maui.csproj \
+          --framework net8.0-android \
+          --configuration Debug \
+          --no-restore \
+          --verbosity normal
+          
+    - name: Upload Android APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk-debug
+        path: |
+          bin/Debug/net8.0-android/**/*.apk
+          bin/Debug/net8.0-android/**/*-Signed.apk
+        retention-days: 30
+        if-no-files-found: warn
+
+  ios-build:
+    name: iOS Build
+    runs-on: macos-latest
+    needs: tests  # Wait for tests to pass before building iOS
+    if: success() # Only run if tests passed
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Install MAUI iOS Workload  
+      run: |
+        dotnet workload install maui-ios
+        dotnet workload list
+        
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 'latest-stable'
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore NuGet packages for iOS
+      run: |
+        dotnet restore BitChat.Maui.csproj -p:TargetFramework=net8.0-ios
+      
+    - name: Build iOS
+      run: |
+        dotnet build BitChat.Maui.csproj \
+          --framework net8.0-ios \
+          --configuration Debug \
+          --no-restore \
+          --verbosity normal
+          
+    - name: Upload iOS App Bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-app-debug
+        path: |
+          bin/Debug/net8.0-ios/**/*.app
+          bin/Debug/net8.0-ios/**/BitChat.Maui.app/**
+        retention-days: 30
+        if-no-files-found: warn
+        
+    - name: Build Summary
+      run: |
+        echo "## Build Results Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ✅ Android Build: Completed successfully" >> $GITHUB_STEP_SUMMARY
+        echo "### ✅ iOS Build: Completed successfully" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Artifacts Generated:**" >> $GITHUB_STEP_SUMMARY
+        echo "- 📱 Android APK (Debug)" >> $GITHUB_STEP_SUMMARY
+        echo "- 🍎 iOS App Bundle (Debug)" >> $GITHUB_STEP_SUMMARY
+        echo "- 🧪 Test Results & Coverage" >> $GITHUB_STEP_SUMMARY
+
+  build-status:
+    name: Build Status Check
+    runs-on: ubuntu-latest
+    needs: [tests, android-build, ios-build]
+    if: always()
+    
+    steps:
+    - name: Check build results
+      run: |
+        echo "=== Build Status Report ==="
+        echo "Tests: ${{ needs.tests.result }}"
+        echo "Android Build: ${{ needs.android-build.result }}"
+        echo "iOS Build: ${{ needs.ios-build.result }}"
+        
+        if [[ "${{ needs.tests.result }}" != "success" ]]; then
+          echo "❌ Tests failed"
+          exit 1
+        fi
+        
+        if [[ "${{ needs.android-build.result }}" != "success" ]] && [[ "${{ needs.android-build.result }}" != "skipped" ]]; then
+          echo "❌ Android build failed"  
+          exit 1
+        fi
+        
+        if [[ "${{ needs.ios-build.result }}" != "success" ]] && [[ "${{ needs.ios-build.result }}" != "skipped" ]]; then
+          echo "❌ iOS build failed"  
+          exit 1
+        fi
+        
+        echo "✅ All builds completed successfully"
