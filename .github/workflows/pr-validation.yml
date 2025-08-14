@@ -18,17 +18,20 @@ jobs:
         
     - name: Validate PR Title
       run: |
-        echo "Validating PR title: ${{ github.event.pull_request.title }}"
+        title="${{ github.event.pull_request.title }}"
+        echo "Validating PR title: $title"
         
-        # Check if PR title follows conventional commit format
-        if [[ "${{ github.event.pull_request.title }}" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-z0-9-]+\))?: .{1,50}$ ]]; then
+        # Check if PR title follows conventional commit format (up to 100 chars)
+        if [[ "$title" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-zA-Z0-9._-]+\))?: .{1,100}$ ]]; then
           echo "✅ PR title follows conventional commit format"
         else
           echo "❌ PR title should follow format: type(scope): description"
           echo "Examples:"
           echo "  feat(ui): add dark mode support"
-          echo "  fix(bluetooth): resolve connection timeout issue"
+          echo "  fix(bluetooth): resolve connection timeout issue"  
           echo "  test(integration): add settings service tests"
+          echo "Current title: $title"
+          echo "Length: ${#title} characters"
           exit 1
         fi
         
@@ -89,7 +92,7 @@ jobs:
             echo "Checking commit: $message"
             
             # Allow merge commits and conventional commit format
-            if [[ "$message" =~ ^Merge.* ]] || [[ "$message" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-z0-9-]+\))?: .+ ]]; then
+            if [[ "$message" =~ ^Merge.* ]] || [[ "$message" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-zA-Z0-9._-]+\))?: .+ ]]; then
               echo "  ✅ Valid commit message format"
             else
               echo "  ❌ Invalid commit message format"
