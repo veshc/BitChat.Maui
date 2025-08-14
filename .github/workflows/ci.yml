@@ -177,7 +177,7 @@ jobs:
           
     - name: Restore NuGet packages for iOS
       run: |
-        dotnet restore BitChat.Maui.csproj
+        dotnet restore BitChat.Maui.csproj -p:TargetFramework=net8.0-ios
       
     - name: Build iOS
       run: |
