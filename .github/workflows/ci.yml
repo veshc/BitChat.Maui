@@ -181,8 +181,10 @@ jobs:
       
     - name: Build iOS
       run: |
-        dotnet build --framework net8.0-ios \
+        dotnet build BitChat.Maui.csproj \
+          --framework net8.0-ios \
           --configuration Debug \
+          --no-restore \
           --verbosity normal
           
     - name: Upload iOS App Bundle
