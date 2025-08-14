@@ -122,7 +122,6 @@ jobs:
           
     - name: Restore NuGet packages for Android
       run: |
-        dotnet workload restore BitChat.Maui.csproj
         dotnet restore BitChat.Maui.csproj
         
     - name: Build Android
@@ -178,7 +177,6 @@ jobs:
           
     - name: Restore NuGet packages for iOS
       run: |
-        dotnet workload restore BitChat.Maui.csproj
         dotnet restore BitChat.Maui.csproj
       
     - name: Build iOS
