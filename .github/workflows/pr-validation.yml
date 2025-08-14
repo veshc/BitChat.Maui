@@ -1,0 +1,147 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main, develop ]
+
+jobs:
+  pr-validation:
+    name: PR Validation Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for commit analysis
+        
+    - name: Validate PR Title
+      run: |
+        echo "Validating PR title: ${{ github.event.pull_request.title }}"
+        
+        # Check if PR title follows conventional commit format
+        if [[ "${{ github.event.pull_request.title }}" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-z0-9-]+\))?: .{1,50}$ ]]; then
+          echo "✅ PR title follows conventional commit format"
+        else
+          echo "❌ PR title should follow format: type(scope): description"
+          echo "Examples:"
+          echo "  feat(ui): add dark mode support"
+          echo "  fix(bluetooth): resolve connection timeout issue"
+          echo "  test(integration): add settings service tests"
+          exit 1
+        fi
+        
+    - name: Check Branch Naming
+      run: |
+        branch_name="${{ github.head_ref }}"
+        echo "Validating branch name: $branch_name"
+        
+        # Check if branch follows naming convention
+        if [[ "$branch_name" =~ ^(feature|fix|hotfix|chore)\/[a-zA-Z0-9._-]+$ ]] || [[ "$branch_name" =~ ^(feature\/US-[0-9]+\.[0-9]+\.[0-9]+-.+|fix\/BUG-[0-9]+-.+|hotfix\/.+)$ ]]; then
+          echo "✅ Branch name follows naming convention"
+        else
+          echo "❌ Branch name should follow format:"
+          echo "  feature/description or feature/US-X.X.X-description"
+          echo "  fix/description or fix/BUG-XXX-description" 
+          echo "  hotfix/description"
+          echo "  chore/description"
+          exit 1
+        fi
+        
+    - name: Check Required Files
+      run: |
+        echo "Checking for required project files..."
+        
+        required_files=(
+          "BitChat.Maui.csproj"
+          "Tests/BitChat.Maui.Tests.csproj"
+          "UITests/BitChat.Maui.UITests.csproj"
+          "README.md"
+        )
+        
+        missing_files=()
+        for file in "${required_files[@]}"; do
+          if [[ ! -f "$file" ]]; then
+            missing_files+=("$file")
+          fi
+        done
+        
+        if [[ ${#missing_files[@]} -eq 0 ]]; then
+          echo "✅ All required files are present"
+        else
+          echo "❌ Missing required files:"
+          printf '%s\n' "${missing_files[@]}"
+          exit 1
+        fi
+        
+    - name: Check Commit Message Format
+      run: |
+        echo "Validating recent commit messages..."
+        
+        # Get all commits in this PR
+        commits=$(git log --format="%H" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+        
+        invalid_commits=()
+        while IFS= read -r commit; do
+          if [[ -n "$commit" ]]; then
+            message=$(git log --format="%s" -n 1 "$commit")
+            echo "Checking commit: $message"
+            
+            # Allow merge commits and conventional commit format
+            if [[ "$message" =~ ^Merge.* ]] || [[ "$message" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|security|platform)(\([a-z0-9-]+\))?: .+ ]]; then
+              echo "  ✅ Valid commit message format"
+            else
+              echo "  ❌ Invalid commit message format"
+              invalid_commits+=("$commit: $message")
+            fi
+          fi
+        done <<< "$commits"
+        
+        if [[ ${#invalid_commits[@]} -eq 0 ]]; then
+          echo "✅ All commit messages follow conventional commit format"
+        else
+          echo "❌ Invalid commit messages found:"
+          printf '%s\n' "${invalid_commits[@]}"
+          echo ""
+          echo "Commit messages should follow format: type(scope): description"
+          echo "Examples:"
+          echo "  feat(bluetooth): add peer discovery functionality"
+          echo "  fix(ui): resolve settings page validation error"
+          echo "  test(unit): add UserIdentity validation tests"
+          exit 1
+        fi
+        
+    - name: PR Size Check
+      run: |
+        echo "Checking PR size..."
+        
+        # Get the number of changed files and lines
+        changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | wc -l)
+        added_lines=$(git diff --stat ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | tail -1 | sed 's/.*+\([0-9]*\).*/\1/' || echo "0")
+        
+        echo "Changed files: $changed_files"
+        echo "Added lines: $added_lines"
+        
+        # Warning thresholds (not blocking)
+        if [[ $changed_files -gt 20 ]]; then
+          echo "⚠️ Warning: Large PR with $changed_files changed files. Consider breaking into smaller PRs."
+        fi
+        
+        if [[ $added_lines -gt 1000 ]]; then
+          echo "⚠️ Warning: Large PR with $added_lines added lines. Consider breaking into smaller PRs."
+        fi
+        
+        echo "✅ PR size check completed (warnings are non-blocking)"
+        
+    - name: Validation Summary
+      if: always()
+      run: |
+        echo "## PR Validation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**PR Details:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Title: ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Branch: ${{ github.head_ref }} → ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Author: @${{ github.event.pull_request.user.login }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "All validation checks have been completed. ✅" >> $GITHUB_STEP_SUMMARY
