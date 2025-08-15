@@ -20,6 +20,29 @@ public class SettingsService : ISettingsService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Safely invokes action on main thread, or synchronously if in test environment
+    /// </summary>
+    private void SafeInvokeOnMainThread(Action action)
+    {
+        try
+        {
+            if (MainThread.IsMainThread)
+            {
+                action();
+            }
+            else
+            {
+                MainThread.BeginInvokeOnMainThread(action);
+            }
+        }
+        catch (Exception)
+        {
+            // In test environment, just execute synchronously
+            action();
+        }
+    }
+
     /// <inheritdoc />
     public event EventHandler<UserIdentity>? UserIdentityChanged;
 
@@ -89,7 +112,7 @@ public class SettingsService : ISettingsService
                     oldNickname, trimmedNickname);
 
                 // Raise the event on the UI thread
-                MainThread.BeginInvokeOnMainThread(() =>
+                SafeInvokeOnMainThread(() =>
                 {
                     var newIdentity = new UserIdentity { Nickname = trimmedNickname };
                     UserIdentityChanged?.Invoke(this, newIdentity);
@@ -114,7 +137,7 @@ public class SettingsService : ISettingsService
                 _logger.LogInformation("All user settings cleared");
 
                 // Raise event with default identity
-                MainThread.BeginInvokeOnMainThread(() =>
+                SafeInvokeOnMainThread(() =>
                 {
                     var defaultIdentity = new UserIdentity { Nickname = DefaultNickname };
                     UserIdentityChanged?.Invoke(this, defaultIdentity);

@@ -26,9 +26,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Reference only the business logic models that don't depend on MAUI -->
+    <!-- Include all core business logic files for testing -->
     <Compile Include="../Core/Models/UserIdentity.cs" />
+    <Compile Include="../Core/Models/BitchatMessage.cs" />
     <Compile Include="../Core/Interfaces/ISettingsService.cs" />
+    <Compile Include="../Core/Interfaces/IMessageService.cs" />
+    <Compile Include="../Core/Services/SettingsService.cs" />
+    <Compile Include="../Core/Services/MessageService.cs" />
+    <Compile Include="../Presentation/ViewModels/ChatViewModel.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="8.0.90" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.90" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.90" />
+    <PackageReference Include="Appium.WebDriver" Version="5.0.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.21.0" />
+    <PackageReference Include="Selenium.Support" Version="4.21.0" />
   </ItemGroup>
 
 </Project>
