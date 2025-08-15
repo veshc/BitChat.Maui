@@ -146,7 +146,7 @@ public abstract class AppiumTestBase : IDisposable
         return wait.Until(driver => 
         {
             var element = driver.FindElement(locator);
-            return element.Displayed ? element : null;
+            return element.Displayed ? element : null!;
         });
     }
     
@@ -159,7 +159,7 @@ public abstract class AppiumTestBase : IDisposable
         return wait.Until(driver =>
         {
             var element = driver.FindElement(locator);
-            return element.Displayed && element.Enabled ? element : null;
+            return element.Displayed && element.Enabled ? element : null!;
         });
     }
     
