@@ -51,8 +51,9 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to initialize settings");
-            await Application.Current?.MainPage?.DisplayAlert("Error", 
-                "Failed to load settings. Please try again.", "OK");
+            if (Application.Current?.MainPage != null)
+                await Application.Current.MainPage.DisplayAlert("Error", 
+                    "Failed to load settings. Please try again.", "OK");
         }
     }
 
@@ -124,14 +125,16 @@ public partial class SettingsViewModel : ObservableObject
 
             _logger.LogInformation("Nickname saved: {Nickname}", Nickname);
             
-            await Application.Current?.MainPage?.DisplayAlert("Success", 
-                "Settings saved successfully!", "OK");
+            if (Application.Current?.MainPage != null)
+                await Application.Current.MainPage.DisplayAlert("Success", 
+                    "Settings saved successfully!", "OK");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save nickname: {Nickname}", Nickname);
-            await Application.Current?.MainPage?.DisplayAlert("Error", 
-                $"Failed to save settings: {ex.Message}", "OK");
+            if (Application.Current?.MainPage != null)
+                await Application.Current.MainPage.DisplayAlert("Error", 
+                    $"Failed to save settings: {ex.Message}", "OK");
         }
     }
 
@@ -141,9 +144,11 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task ResetSettingsAsync()
     {
-        var confirm = await Application.Current?.MainPage?.DisplayAlert("Confirm Reset", 
-            "Are you sure you want to reset all settings? This action cannot be undone.", 
-            "Yes", "No");
+        bool confirm = false;
+        if (Application.Current?.MainPage != null)
+            confirm = await Application.Current.MainPage.DisplayAlert("Confirm Reset", 
+                "Are you sure you want to reset all settings? This action cannot be undone.", 
+                "Yes", "No");
 
         if (confirm != true)
             return;
@@ -155,14 +160,16 @@ public partial class SettingsViewModel : ObservableObject
 
             _logger.LogInformation("All settings reset to defaults");
             
-            await Application.Current?.MainPage?.DisplayAlert("Reset Complete", 
-                "All settings have been reset to defaults.", "OK");
+            if (Application.Current?.MainPage != null)
+                await Application.Current.MainPage.DisplayAlert("Reset Complete", 
+                    "All settings have been reset to defaults.", "OK");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to reset settings");
-            await Application.Current?.MainPage?.DisplayAlert("Error", 
-                "Failed to reset settings. Please try again.", "OK");
+            if (Application.Current?.MainPage != null)
+                await Application.Current.MainPage.DisplayAlert("Error", 
+                    "Failed to reset settings. Please try again.", "OK");
         }
     }
 }

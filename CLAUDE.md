@@ -475,6 +475,81 @@ Every feature from the Swift implementation must be included:
 - Incomplete testing
 - Pending CI/CD failures
 
+### 🚨 ANTI-COMPLETION BIAS SAFEGUARDS
+
+**Critical Protection Against Rationalization and Premature Completion**
+
+#### ❌ NEVER RATIONALIZE AWAY TEST FAILURES
+
+**Test compilation errors are ALWAYS blocking issues, never "infrastructure problems":**
+- 22 test errors = 22 blocking issues that MUST be fixed before proceeding
+- NO exceptions for "it works on one platform"
+- NO proceeding while tests cannot compile or run
+- NO commits when test suite is broken
+
+#### 🛑 PROHIBITED RATIONALIZATION PHRASES
+
+**If you catch yourself saying ANY of these, STOP immediately:**
+- "This is just an infrastructure issue"
+- "The core functionality works"
+- "These are separate concerns" 
+- "It works on iOS so Android doesn't matter"
+- "We can commit this and fix tests later"
+- "The main implementation is sound"
+- "This is an environmental issue, not a code issue"
+- "The feature is functionally complete"
+- "These are configuration problems, not implementation problems"
+
+#### 🚫 MANDATORY TEST CRITERIA (NO EXCEPTIONS)
+
+**ALL of the following must be true before ANY commit:**
+- ✅ ALL tests COMPILE without any errors
+- ✅ ALL tests PASS (100% success rate, no exceptions)
+- ✅ ALL platforms show correct functionality
+- ✅ NO selective platform verification ("works on one platform")
+- ✅ NO test skipping or test infrastructure workarounds
+
+#### ⛔ ABSOLUTE COMMIT BLOCKING CONDITIONS
+
+**ANY of these conditions = IMMEDIATE HALT, NO COMMIT:**
+- Any test compilation error
+- Any test failure  
+- Any platform showing wrong interface
+- Any "it should work" claims without verification
+- Any rationalization of failures as "non-blocking"
+- Any attempt to separate "core functionality" from "infrastructure"
+
+#### 🔍 COMPLETION BIAS DETECTION TRIGGERS
+
+**These are warning signs of completion bias - STOP when you notice:**
+- Finding yourself explaining why errors "don't matter"
+- Rushing to commit despite known issues
+- Redefining "done" to exclude current failures
+- Categorizing blocking issues as "separate concerns"
+- Feeling pressure to "just get this committed"
+- Making excuses for partial functionality
+
+#### ✋ MANDATORY STOPPING PROTOCOL
+
+**When completion bias is detected:**
+1. **ACKNOWLEDGE**: "I am exhibiting completion bias"
+2. **HALT**: Stop all commit/PR activities immediately
+3. **RESET**: Return to fixing ALL blocking issues
+4. **VERIFY**: Ensure 100% success on ALL criteria
+5. **DOCUMENT**: Record what bias patterns were observed
+
+#### 🎯 TRUE COMPLETION DEFINITION
+
+**A feature is NEVER complete until:**
+- EVERY test compiles successfully
+- EVERY test passes 
+- EVERY platform shows correct functionality
+- EVERY acceptance criterion is verified
+- NO known issues or failures remain
+- NO rationalization or workarounds required
+
+**Remember: "Working on one platform" is NOT "working" - it's "partially broken"**
+
 ---
 
 ## Implementation Roadmap

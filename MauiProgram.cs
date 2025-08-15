@@ -23,12 +23,15 @@ public static class MauiProgram
 
 		// Register services
 		builder.Services.AddSingleton<ISettingsService, SettingsService>();
+		builder.Services.AddSingleton<IMessageService, MessageService>();
 
 		// Register ViewModels
 		builder.Services.AddTransient<SettingsViewModel>();
+		builder.Services.AddTransient<ChatViewModel>();
 
 		// Register Views
 		builder.Services.AddTransient<SettingsPage>();
+		builder.Services.AddTransient<MainPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

@@ -1,87 +1,194 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="BitChat.Maui.MainPage"
              Title="BitChat">
 
-    <Grid>
-        <!-- Settings Button in Top Right -->
-        <Button x:Name="SettingsBtn"
-                Text="⚙️"
-                FontSize="20"
-                BackgroundColor="Transparent"
-                TextColor="{DynamicResource PrimaryColor}"
-                VerticalOptions="Start"
-                HorizontalOptions="End"
-                Margin="10"
-                WidthRequest="50"
-                HeightRequest="50"
-                Clicked="OnSettingsClicked"
-                SemanticProperties.Hint="Open settings" />
+    <Grid RowDefinitions="Auto,*,Auto">
+        
+        <!-- Header Bar -->
+        <Grid Grid.Row="0" 
+              BackgroundColor="{DynamicResource PrimaryColor}"
+              Padding="10"
+              ColumnDefinitions="Auto,*,Auto">
+            
+            <!-- BitChat Title -->
+            <Label Grid.Column="0"
+                   Text="💬 BitChat"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   VerticalOptions="Center"
+                   Margin="5,0" />
+            
+            <!-- Connection Status -->
+            <HorizontalStackLayout Grid.Column="1"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   Spacing="5">
+                <Label Text="{Binding ConnectedPeers, StringFormat='{0} peers'}"
+                       TextColor="White"
+                       FontSize="14"
+                       VerticalOptions="Center" />
+                <Label Text="•"
+                       TextColor="{Binding HasConnectedPeers, Converter={StaticResource BoolToColorConverter}}"
+                       FontSize="14"
+                       VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            
+            <!-- Settings Button -->
+            <Button Grid.Column="2"
+                    Text="⚙️"
+                    FontSize="20"
+                    BackgroundColor="Transparent"
+                    TextColor="White"
+                    VerticalOptions="Center"
+                    HorizontalOptions="End"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    Clicked="OnSettingsClicked"
+                    SemanticProperties.Hint="Open settings" />
+        </Grid>
 
-        <ScrollView>
-            <VerticalStackLayout
-                Padding="30,0"
-                Spacing="25"
-                VerticalOptions="Center">
-                
-                <!-- BitChat Logo/Icon -->
-                <Label
-                    Text="💬"
-                    FontSize="120"
-                    HorizontalOptions="Center"
-                    SemanticProperties.Description="BitChat messaging app icon" />
-
-                <Label
-                    Text="BitChat"
-                    Style="{StaticResource Headline}"
-                    HorizontalOptions="Center"
-                    SemanticProperties.HeadingLevel="Level1" />
-
-                <Label
-                    Text="Decentralized messaging&#10;over Bluetooth mesh networks"
-                    Style="{StaticResource SubHeadline}"
-                    SemanticProperties.HeadingLevel="Level2"
-                    HorizontalOptions="Center"
-                    HorizontalTextAlignment="Center" />
-
-                <!-- Status Display -->
-                <Frame BackgroundColor="{DynamicResource CardBackgroundColor}"
-                       BorderColor="{DynamicResource BorderColor}"
-                       CornerRadius="10"
-                       Padding="20"
-                       Margin="0,20">
-                    <StackLayout Spacing="10">
-                        <Label Text="Status: Getting Started"
-                               FontAttributes="Bold"
-                               HorizontalOptions="Center" />
-                        <Label Text="Welcome to BitChat! Configure your settings to begin messaging."
-                               HorizontalTextAlignment="Center"
-                               FontSize="14"
-                               TextColor="{DynamicResource SecondaryTextColor}" />
-                    </StackLayout>
-                </Frame>
-
-                <!-- Quick Actions -->
-                <StackLayout Spacing="15" Margin="0,20">
-                    <Button
-                        x:Name="SettingsButton"
-                        Text="Configure Settings" 
-                        BackgroundColor="{DynamicResource PrimaryColor}"
-                        TextColor="White"
-                        CornerRadius="10"
-                        HeightRequest="50"
-                        Clicked="OnSettingsClicked"
-                        HorizontalOptions="Fill" />
-                    
-                    <Label Text="Set your nickname and configure your identity to start chatting with nearby users."
-                           FontSize="12"
-                           HorizontalTextAlignment="Center"
-                           TextColor="{DynamicResource SecondaryTextColor}" />
-                </StackLayout>
-                
+        <!-- Message List -->
+        <Grid Grid.Row="1">
+            <!-- Empty State -->
+            <VerticalStackLayout IsVisible="{Binding IsEmpty}"
+                                VerticalOptions="Center"
+                                HorizontalOptions="Center"
+                                Spacing="20"
+                                Padding="40">
+                <Label Text="💬"
+                       FontSize="80"
+                       HorizontalOptions="Center"
+                       Opacity="0.5" />
+                <Label Text="No messages yet"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{DynamicResource SecondaryTextColor}" />
+                <Label Text="Start a conversation by typing a message below"
+                       FontSize="14"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{DynamicResource SecondaryTextColor}" />
             </VerticalStackLayout>
-        </ScrollView>
+
+            <!-- Messages CollectionView -->
+            <CollectionView x:Name="MessagesCollectionView"
+                           ItemsSource="{Binding Messages}"
+                           IsVisible="{Binding IsEmpty, Converter={StaticResource InverseBoolConverter}}"
+                           VerticalScrollBarVisibility="Always"
+                           ItemsUpdatingScrollMode="KeepLastItemInView">
+                
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="10,5"
+                              ColumnDefinitions="*,Auto,*">
+                            
+                            <!-- Own Message (right-aligned) -->
+                            <Frame Grid.Column="1"
+                                   Grid.ColumnSpan="2"
+                                   IsVisible="{Binding IsOwnMessage}"
+                                   BackgroundColor="{DynamicResource PrimaryColor}"
+                                   BorderColor="Transparent"
+                                   CornerRadius="15"
+                                   Padding="10"
+                                   Margin="50,2,10,2"
+                                   HorizontalOptions="End">
+                                <VerticalStackLayout Spacing="5">
+                                    <Label Text="{Binding Content}"
+                                           TextColor="White"
+                                           FontSize="14" />
+                                    <HorizontalStackLayout Spacing="5">
+                                        <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
+                                               TextColor="White"
+                                               FontSize="11"
+                                               Opacity="0.8" />
+                                        <Label Text="✓"
+                                               TextColor="White"
+                                               FontSize="11"
+                                               Opacity="0.8"
+                                               IsVisible="{Binding Status, Converter={StaticResource StatusToCheckmarkConverter}}" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Frame>
+                            
+                            <!-- Other's Message (left-aligned) -->
+                            <Frame Grid.Column="0"
+                                   Grid.ColumnSpan="2"
+                                   IsVisible="{Binding IsOwnMessage, Converter={StaticResource InverseBoolConverter}}"
+                                   BackgroundColor="{DynamicResource CardBackgroundColor}"
+                                   BorderColor="{DynamicResource BorderColor}"
+                                   CornerRadius="15"
+                                   Padding="10"
+                                   Margin="10,2,50,2"
+                                   HorizontalOptions="Start">
+                                <VerticalStackLayout Spacing="5">
+                                    <Label Text="{Binding Sender}"
+                                           TextColor="{DynamicResource PrimaryColor}"
+                                           FontSize="12"
+                                           FontAttributes="Bold" />
+                                    <Label Text="{Binding Content}"
+                                           TextColor="{DynamicResource PrimaryTextColor}"
+                                           FontSize="14" />
+                                    <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
+                                           TextColor="{DynamicResource SecondaryTextColor}"
+                                           FontSize="11"
+                                           Opacity="0.8" />
+                                </VerticalStackLayout>
+                            </Frame>
+                            
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Message Input Area -->
+        <Grid Grid.Row="2"
+              BackgroundColor="{DynamicResource CardBackgroundColor}"
+              Padding="10"
+              ColumnDefinitions="*,Auto">
+            
+            <Frame Grid.Column="0"
+                   BackgroundColor="{DynamicResource BackgroundColor}"
+                   BorderColor="{DynamicResource BorderColor}"
+                   CornerRadius="20"
+                   Padding="5,0"
+                   Margin="0,0,10,0">
+                <Entry x:Name="MessageEntry"
+                       Text="{Binding MessageText}"
+                       Placeholder="Type a message..."
+                       PlaceholderColor="{DynamicResource SecondaryTextColor}"
+                       TextColor="{DynamicResource PrimaryTextColor}"
+                       BackgroundColor="Transparent"
+                       FontSize="14"
+                       ReturnType="Send"
+                       ReturnCommand="{Binding SendMessageCommand}"
+                       IsEnabled="{Binding IsSending, Converter={StaticResource InverseBoolConverter}}" />
+            </Frame>
+            
+            <Button Grid.Column="1"
+                    Text="Send"
+                    Command="{Binding SendMessageCommand}"
+                    BackgroundColor="{DynamicResource PrimaryColor}"
+                    TextColor="White"
+                    CornerRadius="20"
+                    WidthRequest="80"
+                    IsEnabled="{Binding IsSending, Converter={StaticResource InverseBoolConverter}}" />
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <Grid Grid.RowSpan="3"
+              IsVisible="{Binding IsSending}"
+              BackgroundColor="#80000000">
+            <ActivityIndicator IsRunning="True"
+                             Color="{DynamicResource PrimaryColor}"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center" />
+        </Grid>
     </Grid>
 
 </ContentPage>
