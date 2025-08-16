@@ -1,26 +1,27 @@
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
+using OpenQA.Selenium.Support.UI;
 
-namespace BitChat.Maui.UITests.Shared.Pages;
+namespace BitChat.Maui.Tests.UI.Shared.Pages;
 
 /// <summary>
 /// Cross-platform Page Object Model for the Main page
 /// Uses platform-aware locators for iOS (name/label/value) and Android (text/content-desc)
-/// Compatible with Appium.WebDriver 4.4.0 + Selenium.WebDriver 4.12.4
+/// Compatible with Appium.WebDriver 5.0.0 + Selenium.WebDriver 4.x
 /// </summary>
 public class MainPage
 {
-    private readonly AppiumDriver<IWebElement> _driver;
+    private readonly AppiumDriver _driver;
     private readonly Platform _platform;
 
-    public MainPage(AppiumDriver<IWebElement> driver, Platform platform)
+    public MainPage(AppiumDriver driver, Platform platform)
     {
         _driver = driver ?? throw new ArgumentNullException(nameof(driver));
         _platform = platform;
     }
 
     // Backward compatibility constructor (assumes iOS for existing tests)
-    public MainPage(AppiumDriver<IWebElement> driver) : this(driver, Platform.iOS)
+    public MainPage(AppiumDriver driver) : this(driver, Platform.iOS)
     {
     }
 
@@ -111,7 +112,7 @@ public class MainPage
                     var settingsButton = elements.First();
                     
                     // Ensure element is clickable
-                    var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+                    var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
                     wait.Until(d => settingsButton.Displayed && settingsButton.Enabled);
                     
                     settingsButton.Click();
@@ -196,12 +197,12 @@ public class MainPage
 
     /// <summary>
     /// Waits for the Main page to be displayed
-    /// Compatible with Selenium.WebDriver 4.12.4
+    /// Compatible with Selenium.WebDriver 4.x
     /// </summary>
     /// <param name="timeout">Maximum time to wait</param>
     public void WaitForPageToLoad(TimeSpan? timeout = null)
     {
-        var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(30));
+        var wait = new WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(30));
         wait.Until(driver => IsDisplayed);
     }
 
@@ -211,7 +212,7 @@ public class MainPage
     /// <param name="timeout">Maximum time to wait</param>
     public async Task WaitForSettingsButtonAsync(TimeSpan? timeout = null)
     {
-        var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(10));
+        var wait = new WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(10));
         
         wait.Until(driver =>
         {

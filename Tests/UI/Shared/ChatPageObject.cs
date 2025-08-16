@@ -1,5 +1,6 @@
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
+using OpenQA.Selenium.Appium.MultiTouch;
 using OpenQA.Selenium.Interactions;
 
 namespace BitChat.Maui.Tests.UI.Shared;
@@ -55,7 +56,7 @@ public class ChatPageObject
         return _testBase.CurrentPlatform switch
         {
             // Use XPath selectors for iOS since MAUI doesn't set accessibility IDs properly
-            AppiumTestBase.Platform.iOS => automationId switch
+            Platform.iOS => automationId switch
             {
                 "MessageInput" => By.XPath("//XCUIElementTypeTextField[@placeholderValue='Type a message...']"),
                 "SendButton" => By.XPath("//XCUIElementTypeButton[@name='Send']"),
@@ -67,7 +68,7 @@ public class ChatPageObject
                 "RefreshPeersButton" => By.XPath("//XCUIElementTypeButton[@name='Refresh']"),
                 _ => MobileBy.AccessibilityId(automationId) // Fallback to accessibility ID
             },
-            AppiumTestBase.Platform.Android => MobileBy.Id($"com.bitchat.maui:id/{fallbackId}"),
+            Platform.Android => MobileBy.Id($"com.bitchat.maui:id/{fallbackId}"),
             _ => throw new ArgumentException($"Unsupported platform: {_testBase.CurrentPlatform}")
         };
     }
@@ -76,8 +77,8 @@ public class ChatPageObject
     {
         return _testBase.CurrentPlatform switch
         {
-            AppiumTestBase.Platform.iOS => MobileBy.XPath($"//XCUIElementTypeStaticText[contains(@value,'{text}')]"),
-            AppiumTestBase.Platform.Android => MobileBy.XPath($"//*[contains(@text,'{text}')]"),
+            Platform.iOS => MobileBy.XPath($"//XCUIElementTypeStaticText[contains(@value,'{text}')]"),
+            Platform.Android => MobileBy.XPath($"//*[contains(@text,'{text}')]"),
             _ => throw new ArgumentException($"Unsupported platform: {_testBase.CurrentPlatform}")
         };
     }
@@ -118,7 +119,7 @@ public class ChatPageObject
         _testBase.TapElement(ClearMessagesButton);
         
         // Handle platform-specific confirmation dialog
-        if (_testBase.CurrentPlatform == AppiumTestBase.Platform.iOS)
+        if (_testBase.CurrentPlatform == Platform.iOS)
         {
             var confirmButton = MobileBy.AccessibilityId("Yes");
             if (_testBase.ElementExists(confirmButton))
@@ -163,8 +164,8 @@ public class ChatPageObject
     {
         var messageLocator = _testBase.CurrentPlatform switch
         {
-            AppiumTestBase.Platform.iOS => MobileBy.XPath($"//XCUIElementTypeCell[contains(@value,'{sender}') and contains(@value,'{messageContent}')]"),
-            AppiumTestBase.Platform.Android => MobileBy.XPath($"//*[contains(@text,'{sender}') and contains(@text,'{messageContent}')]"),
+            Platform.iOS => MobileBy.XPath($"//XCUIElementTypeCell[contains(@value,'{sender}') and contains(@value,'{messageContent}')]"),
+            Platform.Android => MobileBy.XPath($"//*[contains(@text,'{sender}') and contains(@text,'{messageContent}')]"),
             _ => throw new ArgumentException($"Unsupported platform: {_testBase.CurrentPlatform}")
         };
         
@@ -197,7 +198,13 @@ public class ChatPageObject
     public string GetMessageInputText()
     {
         var element = _testBase.WaitForElement(MessageInputField);
-        return element.Text;
+        
+        // For text fields, use the value attribute rather than Text property
+        // value attribute contains actual input text, not placeholder
+        var inputValue = element.GetAttribute("value");
+        
+        // If value is the placeholder text or null, consider it empty
+        return (inputValue == "Type a message..." || string.IsNullOrEmpty(inputValue)) ? "" : inputValue;
     }
     
     /// <summary>
@@ -284,7 +291,7 @@ public class ChatPageObject
     {
         var messagesList = _testBase.WaitForElement(MessagesList);
         
-        if (_testBase.CurrentPlatform == AppiumTestBase.Platform.iOS)
+        if (_testBase.CurrentPlatform == Platform.iOS)
         {
             // iOS scroll gesture
             _driver.ExecuteScript("mobile: scroll", new Dictionary<string, object>
@@ -319,7 +326,7 @@ public class ChatPageObject
     {
         var messagesList = _testBase.WaitForElement(MessagesList);
         
-        if (_testBase.CurrentPlatform == AppiumTestBase.Platform.iOS)
+        if (_testBase.CurrentPlatform == Platform.iOS)
         {
             // iOS scroll gesture
             _driver.ExecuteScript("mobile: scroll", new Dictionary<string, object>

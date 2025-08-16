@@ -2,27 +2,38 @@
 
 ## Overview
 
-This directory contains comprehensive UI tests for the BitChat MAUI application using Appium WebDriver for cross-platform mobile testing. The tests verify the complete user workflows for US-7.1.1 Public Chat View functionality.
+This directory contains comprehensive UI tests for the BitChat MAUI application using Appium WebDriver for cross-platform mobile testing. The tests verify the complete user workflows for multiple user stories including:
+
+- **US-7.1.1**: Public Chat View functionality
+- **US-3.1.1**: Nickname Management functionality
 
 ## Test Structure
 
 ### Test Categories
 
-1. **iOS Tests** (`ChatUITests.cs`) - 12 test methods
-   - Core chat interface functionality on iOS platform
-   - iOS-specific behaviors and UI patterns
+1. **Chat Tests** (`Chat/`)
+   - `ChatUITests.cs` - iOS chat interface tests (12 test methods)
+   - `ChatUITests.Android.cs` - Android chat interface tests (8 test methods)  
+   - Core chat functionality for US-7.1.1
 
-2. **Android Tests** (`ChatUITests.Android.cs`) - 8 test methods  
-   - Android-specific functionality and behaviors
-   - Platform-specific gestures and interactions
+2. **Settings Tests** (`Settings/`)
+   - `NicknameManagementUITests.cs` - Base test class with shared test methods
+   - `IOSNicknameManagementUITests.cs` - iOS-specific nickname tests
+   - `AndroidNicknameManagementUITests.cs` - Android-specific nickname tests
+   - Complete nickname validation and persistence tests for US-3.1.1
 
 3. **Shared Infrastructure** (`Shared/`)
-   - `AppiumTestBase.cs` - Base class with cross-platform driver setup
-   - `ChatPageObject.cs` - Page Object Model for chat interface
+   - `AppiumTestBase.cs` - Enhanced base class with retry logic and async support
+   - `Platform.cs` - Platform enumeration for cross-platform testing
+   - `PlatformLocatorStrategy.cs` - Cross-platform element locator strategies
+   - `Pages/` - Page Object Models for different app screens
+     - `ChatPageObject.cs` - Chat interface page model
+     - `SettingsPage.cs` - Settings screen page model
+     - `MainPage.cs` - Main screen page model
 
 ## Test Coverage
 
-### Core Chat Functionality Tests
+### US-7.1.1 Chat Functionality Tests
 - ✅ Chat interface loading and element presence
 - ✅ Message sending and display verification
 - ✅ Multiple message handling and ordering
@@ -49,6 +60,20 @@ This directory contains comprehensive UI tests for the BitChat MAUI application 
 - ✅ Swipe gestures and scrolling
 - ✅ Long press gesture handling
 
+### US-3.1.1 Nickname Management Tests
+- ✅ Settings page navigation and element verification
+- ✅ Valid nickname entry and validation
+- ✅ Invalid nickname rejection (empty, special characters, too long)
+- ✅ Character counter functionality (0/20 to 20/20)
+- ✅ Real-time validation error display
+- ✅ Save button enable/disable logic
+- ✅ Nickname persistence after saving
+- ✅ Reset/clear nickname functionality
+- ✅ Unicode character support
+- ✅ Emoji character rejection
+- ✅ Boundary testing (19, 20, 21 characters)
+- ✅ Complete integration workflow testing
+
 ## Test Infrastructure
 
 ### Appium Configuration
@@ -70,6 +95,7 @@ This directory contains comprehensive UI tests for the BitChat MAUI application 
 
 ### Page Object Model
 
+#### ChatPageObject
 The `ChatPageObject` class provides a clean abstraction for interacting with the chat interface:
 
 ```csharp
@@ -84,11 +110,43 @@ chatPage.VerifyEmptyState();
 chatPage.VerifyConnectedPeersCount(0);
 ```
 
+#### SettingsPage
+The `SettingsPage` class provides methods for settings and nickname management:
+
+```csharp
+// Navigate and interact with settings
+var mainPage = new MainPage(driver, platform);
+mainPage.NavigateToSettings();
+
+var settingsPage = new SettingsPage(driver, platform);
+settingsPage.EnterNickname("TestUser");
+settingsPage.ClickSave();
+
+// Validation
+settingsPage.IsValidationErrorDisplayed();
+settingsPage.GetCharacterCount();
+```
+
 ### Cross-Platform Element Locators
 
-Elements are located using platform-specific strategies:
-- **iOS**: Accessibility IDs (`MobileBy.AccessibilityId`)
-- **Android**: Resource IDs (`MobileBy.Id`)
+The `PlatformLocatorStrategy` class provides platform-aware element location:
+
+```csharp
+// Automatic platform-specific locators
+var textLocator = PlatformLocatorStrategy.GetElementByText("Settings", platform);
+var containsLocator = PlatformLocatorStrategy.GetElementContainingText("Save", platform);
+var buttonLocator = PlatformLocatorStrategy.GetButtonByText("OK", platform);
+
+// Platform-specific attributes
+var textAttribute = PlatformLocatorStrategy.GetTextAttribute(platform);
+var enabledAttribute = PlatformLocatorStrategy.GetEnabledAttribute(platform);
+```
+
+**Platform Mapping**:
+- **iOS**: Uses `name`, `label`, `value` attributes and XPath strategies  
+- **Android**: Uses `text`, `content-desc` attributes and XPath strategies
+- **Windows**: Uses `Name`, `AutomationId` attributes (future support)
+- **macOS**: Similar to iOS with `name`, `label`, `value` attributes
 
 ## Running UI Tests
 
@@ -114,13 +172,19 @@ Elements are located using platform-specific strategies:
 
 ```bash
 # Run all UI tests (requires simulators/emulators)
+dotnet test --filter "Category=UI"
+
+# Run specific user story tests
+dotnet test --filter "UserStory=US-7.1.1"  # Chat functionality
+dotnet test --filter "UserStory=US-3.1.1"  # Nickname management
+
+# Run platform-specific tests
+dotnet test --filter "Platform=iOS"
+dotnet test --filter "Platform=Android"
+
+# Run specific test classes
 dotnet test --filter "FullyQualifiedName~ChatUITests"
-
-# Run iOS-specific tests only
-dotnet test --filter "FullyQualifiedName~ChatUITests" --filter "Platform=iOS"
-
-# Run Android-specific tests only  
-dotnet test --filter "FullyQualifiedName~ChatUITests" --filter "Platform=Android"
+dotnet test --filter "FullyQualifiedName~NicknameManagementUITests"
 ```
 
 ### Test Environment Setup
@@ -183,8 +247,9 @@ UI tests are designed to integrate with CI/CD pipelines:
 - Proper test categorization for selective execution
 - Cross-platform test matrix support
 
-## US-7.1.1 Acceptance Criteria Coverage
+## User Story Coverage
 
+### US-7.1.1: Public Chat View
 ✅ **AC1**: Users can view the chat interface  
 ✅ **AC2**: Users can send public messages  
 ✅ **AC3**: Users can see sent messages in the message list  
@@ -193,4 +258,27 @@ UI tests are designed to integrate with CI/CD pipelines:
 ✅ **AC6**: The interface handles empty states appropriately  
 ✅ **AC7**: Cross-platform compatibility (iOS/Android)
 
-All acceptance criteria for US-7.1.1 Public Chat View are comprehensively tested through the UI test suite.
+### US-3.1.1: Nickname Management  
+✅ **AC1**: Users can navigate to settings page  
+✅ **AC2**: Users can enter a valid nickname  
+✅ **AC3**: System validates nickname format  
+✅ **AC4**: System shows character count  
+✅ **AC5**: Users can save valid nickname  
+✅ **AC6**: System prevents saving invalid nicknames  
+✅ **AC7**: Users can reset/clear nickname  
+
+## Test Architecture Benefits
+
+### Consolidated Structure
+- **Single test project** eliminates package conflicts and maintenance overhead
+- **Unified infrastructure** with enhanced `AppiumTestBase` for all UI tests
+- **Consistent versioning** using Appium.WebDriver 5.0.0 + Selenium.WebDriver 4.x
+- **Shared page objects** reduce code duplication across test scenarios
+
+### Cross-Platform Testing
+- **Platform abstraction** handles iOS/Android differences automatically  
+- **Smart retry logic** with exponential backoff for reliable test execution
+- **Enhanced wait strategies** using async/await patterns for better performance
+- **Comprehensive element locators** supporting multiple fallback strategies
+
+All acceptance criteria for both user stories are comprehensively tested through the consolidated UI test suite.
