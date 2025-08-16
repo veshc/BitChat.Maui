@@ -1,4 +1,4 @@
-namespace BitChat.Maui.UITests.Shared;
+namespace BitChat.Maui.Tests.UI.Shared;
 
 /// <summary>
 /// Enumeration of supported platforms for UI testing

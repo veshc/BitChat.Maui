@@ -1,14 +1,15 @@
-using BitChat.Maui.UITests.Shared.Pages;
+using BitChat.Maui.Tests.UI.Shared;
+using BitChat.Maui.Tests.UI.Shared.Pages;
 using FluentAssertions;
 using OpenQA.Selenium;
 using Xunit;
 
-namespace BitChat.Maui.UITests.Shared;
+namespace BitChat.Maui.Tests.UI.Settings;
 
 /// <summary>
 /// Comprehensive UI tests for US-3.1.1: Nickname Management user story
 /// Tests the complete user workflow for nickname validation and persistence
-/// Compatible with Appium.WebDriver 4.4.0 + Selenium.WebDriver 4.12.4
+/// Compatible with Appium.WebDriver 5.0.0 + Selenium.WebDriver 4.x
 /// </summary>
 [Collection("UI Tests")]
 [Trait("Category", "UI")]
@@ -31,7 +32,7 @@ public abstract class NicknameManagementUITests : AppiumTestBase
         }
     }
 
-    protected override Platform CurrentPlatform => Platform.iOS; // Default platform
+    public override Shared.Platform CurrentPlatform => Shared.Platform.iOS; // Default platform
 
     #region AC1: User can navigate to settings page
 
@@ -511,7 +512,7 @@ public abstract class NicknameManagementUITests : AppiumTestBase
     }
 
     [Fact]
-    public async Task Integration_CompleteNicknameWorkflow()
+    public async Task CompleteNicknameWorkflow_EndToEnd()
     {
         // Arrange
         _mainPage!.WaitForPageToLoad();

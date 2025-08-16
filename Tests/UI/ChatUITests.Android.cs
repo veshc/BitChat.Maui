@@ -13,11 +13,13 @@ namespace BitChat.Maui.Tests.UI;
 public class ChatUITestsAndroid : AppiumTestBase
 {
     private ChatPageObject _chatPage = null!;
+    
+    public override Shared.Platform CurrentPlatform => Shared.Platform.Android;
 
     public ChatUITestsAndroid()
     {
         // Initialize for Android
-        InitializeDriver(Platform.Android);
+        InitializeAndroidDriver();
         _chatPage = new ChatPageObject(Driver!, this);
     }
 

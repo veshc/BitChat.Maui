@@ -1,26 +1,27 @@
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
+using OpenQA.Selenium.Support.UI;
 
-namespace BitChat.Maui.UITests.Shared.Pages;
+namespace BitChat.Maui.Tests.UI.Shared.Pages;
 
 /// <summary>
 /// Cross-platform Page Object Model for the Settings page
 /// Uses platform-aware locators for iOS (name/label/value) and Android (text/content-desc)
-/// Compatible with Appium.WebDriver 4.4.0 + Selenium.WebDriver 4.12.4
+/// Compatible with Appium.WebDriver 5.0.0 + Selenium.WebDriver 4.x
 /// </summary>
 public class SettingsPage
 {
-    private readonly AppiumDriver<IWebElement> _driver;
+    private readonly AppiumDriver _driver;
     private readonly Platform _platform;
 
-    public SettingsPage(AppiumDriver<IWebElement> driver, Platform platform)
+    public SettingsPage(AppiumDriver driver, Platform platform)
     {
         _driver = driver ?? throw new ArgumentNullException(nameof(driver));
         _platform = platform;
     }
 
     // Backward compatibility constructor (assumes iOS for existing tests)
-    public SettingsPage(AppiumDriver<IWebElement> driver) : this(driver, Platform.iOS)
+    public SettingsPage(AppiumDriver driver) : this(driver, Platform.iOS)
     {
     }
 
@@ -86,7 +87,7 @@ public class SettingsPage
                 var element = _driver.FindElement(NicknameEntryBy);
                 
                 // Ensure element is ready for interaction
-                var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+                var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
                 wait.Until(d => element.Displayed && element.Enabled);
                 
                 element.Clear();
@@ -261,12 +262,12 @@ public class SettingsPage
 
     /// <summary>
     /// Waits for the Settings page to be displayed
-    /// Compatible with Selenium.WebDriver 4.12.4
+    /// Compatible with Selenium.WebDriver 4.x
     /// </summary>
     /// <param name="timeout">Maximum time to wait</param>
     public void WaitForPageToLoad(TimeSpan? timeout = null)
     {
-        var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(10));
+        var wait = new WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(10));
         wait.Until(driver => driver.FindElements(HeaderTitleBy).Count > 0 || driver.FindElements(PageTitleBy).Count > 0);
     }
 
@@ -276,7 +277,7 @@ public class SettingsPage
     /// <param name="timeout">Maximum time to wait</param>
     public void WaitForValidationError(TimeSpan? timeout = null)
     {
-        var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(5));
+        var wait = new WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(5));
         wait.Until(driver => IsValidationErrorDisplayed());
     }
 
@@ -286,7 +287,7 @@ public class SettingsPage
     /// <param name="timeout">Maximum time to wait</param>
     public void WaitForValidationErrorToClear(TimeSpan? timeout = null)
     {
-        var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(5));
+        var wait = new WebDriverWait(_driver, timeout ?? TimeSpan.FromSeconds(5));
         wait.Until(driver => !IsValidationErrorDisplayed());
     }
 

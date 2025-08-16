@@ -69,7 +69,6 @@ jobs:
         required_files=(
           "BitChat.Maui.csproj"
           "Tests/BitChat.Maui.Tests.csproj"
-          "UITests/BitChat.Maui.UITests.csproj"
           "README.md"
         )
         

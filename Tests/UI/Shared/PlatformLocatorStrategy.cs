@@ -1,6 +1,6 @@
 using OpenQA.Selenium;
 
-namespace BitChat.Maui.UITests.Shared;
+namespace BitChat.Maui.Tests.UI.Shared;
 
 /// <summary>
 /// Cross-platform locator strategy that creates appropriate locators for different platforms
