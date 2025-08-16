@@ -512,7 +512,7 @@ public abstract class NicknameManagementUITests : AppiumTestBase
     }
 
     [Fact]
-    public async Task Integration_CompleteNicknameWorkflow()
+    public async Task CompleteNicknameWorkflow_EndToEnd()
     {
         // Arrange
         _mainPage!.WaitForPageToLoad();
