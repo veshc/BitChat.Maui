@@ -33,7 +33,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-tests-${{ hashFiles('Tests/**/*.csproj', 'UITests/**/*.csproj') }}
+        key: ${{ runner.os }}-nuget-tests-${{ hashFiles('Tests/**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-nuget-tests-
           ${{ runner.os }}-nuget-
@@ -41,12 +41,10 @@ jobs:
     - name: Restore Test Projects
       run: |
         dotnet restore Tests/BitChat.Maui.Tests.csproj
-        dotnet restore UITests/BitChat.Maui.UITests.csproj
         
     - name: Build Test Projects
       run: |
         dotnet build Tests/BitChat.Maui.Tests.csproj --configuration Debug --no-restore
-        dotnet build UITests/BitChat.Maui.UITests.csproj --configuration Debug --no-restore
         
     - name: Run Unit Tests
       run: |

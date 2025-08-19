@@ -12,11 +12,13 @@ namespace BitChat.Maui.Tests.UI;
 public class ChatUITests : AppiumTestBase
 {
     private ChatPageObject _chatPage = null!;
+    
+    public override Shared.Platform CurrentPlatform => Shared.Platform.iOS;
 
     public ChatUITests()
     {
         // Initialize for iOS by default - can be parameterized later
-        InitializeDriver(Platform.iOS);
+        InitializeIOSDriver();
         _chatPage = new ChatPageObject(Driver!, this);
     }
 
@@ -39,8 +41,8 @@ public class ChatUITests : AppiumTestBase
             sendButtonExists.Should().BeTrue("Send button should be visible");
             messagesListExists.Should().BeTrue("Messages list should be visible");
 
-            // Verify initial state
-            _chatPage.VerifyEmptyState().Should().BeTrue("Chat should start in empty state");
+            // Verify initial state - app loads with demo messages, so it's not empty
+            _chatPage.GetMessageCount().Should().BeGreaterThan(0, "App should load with demo messages");
             _chatPage.VerifyMessageInputIsEmpty().Should().BeTrue("Message input should be empty initially");
         }
         catch (Exception ex)
